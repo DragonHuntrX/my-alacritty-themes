@@ -13,7 +13,7 @@
       flake-parts,
       ...
     }:
-    flake-parts.lib.simpleFlake {
+    flake-parts.lib.mkFlake {
       inherit self;
       inherit nixpkgs;
 
@@ -22,7 +22,7 @@
         "aarch64-linux"
       ];
 
-      commonOverlays = [
+      overlays = [
         (
           final: prev:
           let

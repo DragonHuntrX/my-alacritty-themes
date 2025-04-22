@@ -7,26 +7,39 @@
   };
 
   outputs =
-    {
+    inputs@{
       self,
       nixpkgs,
       flake-parts,
       ...
     }:
-    flake-parts.lib.mkFlake {
-      inherit self;
-      inherit nixpkgs;
+    flake-parts.lib.mkFlake { inherit inputs; } (
+      top@{
+        config,
+        withSystem,
+        mod,
+        ...
+      }:
+      {
+        imports = [ ];
+        flakoe = {
+          overlays = rec {
+            alacritty-theme = final: prev: {
+              alacritty-theme = self.packages.${prev.system};
+            };
+            default = alacritty-theme;
+          };
 
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-      ];
+        };
 
-      overlays = [
-        (
-          final: prev:
+        systems = [
+          "x86_64-linux"
+          "aarch64-linux"
+        ];
+
+        perSystem =
+          { lib, pkgs, ... }:
           let
-            lib = nixpkgs.lib;
             themeDir = ./themes;
             tomls = builtins.attrNames (builtins.readDir themeDir);
             mkThemes =
@@ -41,11 +54,13 @@
                 value = data.colors;
               };
             themes = lib.listToAttrs (map mkThemes tomls);
+
           in
           {
-            myAlacrittyThemes = themes;
-          }
-        )
-      ];
-    };
+            packages = themes;
+
+          };
+      }
+    );
+
 }
